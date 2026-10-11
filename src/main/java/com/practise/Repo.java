@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Repo {
+    private static boolean isRepo() {
+        return Files.exists(Path.of(".mini-vcs"));
+    }
+
     /** init- creates the repo folder and necessary folders and creates an empty commit */
     public static void init() {
         Path repo = Path.of(".mini-vcs");
@@ -18,7 +22,7 @@ public class Repo {
         Path tempFile = Path.of(".mini-vcs/tempDir/tempFile.txt");
 
         if (Files.exists(repo)) {
-            System.out.println("Repository already exists!\n");
+            System.out.println("Repository already exists!");
             return;
         }
 
@@ -29,7 +33,7 @@ public class Repo {
             Files.createDirectory(tempDir);
 
             StagingArea stagingArea = new StagingArea();
-            Commit initialCommit = new Commit(null, "Initialization Commit", "Date");
+            Commit initialCommit = new Commit(null, "Initialization Commit", Helper.currDateTime());
 
             Helper.objectWrite(initialCommit, tempFile.toString());
             String hex = Helper.sha1(tempFile);
@@ -57,6 +61,11 @@ public class Repo {
      * 6) if the file is in staging area but not in current commit, do the same checks.
      * 7) Finally, show untracked file. */
     public static void status() {
+        if (isRepo()) {
+            System.out.println("Not a valid repo");
+            return;
+        }
+
         StagingArea star = (StagingArea) Helper.objectRead(".mini-vcs/stagingArea.txt");
         String path = ".mini-vcs/commit/" + star.getCurr();
         Commit curr = (Commit) Helper.objectRead(path);
@@ -96,7 +105,7 @@ public class Repo {
 
             Path fileLocation = Path.of(file.getKey());
             if (Files.exists(fileLocation)) {
-                if (!Helper.sha1Checker(fileLocation, file.getKey())) {
+                if (!Helper.sha1Checker(fileLocation, file.getValue())) {
                     modified.add(file.getKey());
                 }
             } else {
@@ -104,21 +113,21 @@ public class Repo {
             }
         }
 
-        System.out.println("To be commited: \n");
+        System.out.println("To be commited:");
         for (Map.Entry<String, String> file : starFiles.entrySet()) {
             if (modified.contains(file.getKey()) || deleted.contains(file.getKey())) { continue; }
 
-            System.out.println(file.getKey() + "\n");
+            System.out.println(file.getKey());
         }
 
-        System.out.println("Modifications not staged: \n");
+        System.out.println("Modifications not staged:");
         for (String s : modified) {
-            System.out.println(s + "\n");
+            System.out.println(s);
         }
 
-        System.out.println("Deleted: \n");
+        System.out.println("Deleted:");
         for (String d : modified) {
-            System.out.println(d + "\n");
+            System.out.println(d);
         }
     }
 
@@ -136,6 +145,11 @@ public class Repo {
      * 6) if the hash is different from the one in the commit, make an entry of the file in the staging area or
      * overwrite it if already present.*/
     public static void add(String file) {
+        if (isRepo()) {
+            System.out.println("Not a valid repo");
+            return;
+        }
+
         StagingArea star = (StagingArea) Helper.objectRead(".mini-vcs/stagingArea.txt");
         String path = ".mini-vcs/commit/" + star.getCurr();
         Commit curr = (Commit) Helper.objectRead(path);
@@ -144,8 +158,36 @@ public class Repo {
         Map<String,String> commitFiles = curr.getFiles();
 
         Path filePath = Path.of(file);
-        
+
         boolean b = Files.exists(filePath);
+
+        if (!b && !commitFiles.containsKey(file) && !starFiles.containsKey(file)) {
+            System.out.println("File does not exist");
+            return;
+        }
+
+        if (!b) {
+            if (starFiles.containsKey(file)) {
+                starFiles.replace(file, "deleted");
+            } else {
+                starFiles.put(file, "deleted");
+            }
+            System.out.println("File: " + file + "staged for deletion");
+            Helper.objectWrite(star ,".mini-vcs/stagingArea.txt");
+            return;
+        }
+
+        String hash = Helper.sha1(filePath);
+
+        if (!Helper.sha1Checker(filePath, commitFiles.get(file))) {
+            if (starFiles.containsKey(file)) {
+                starFiles.replace(file, hash);
+            } else {
+                starFiles.put(file, hash);
+            }
+            System.out.println("File: " + file + "staged for commit");
+            Helper.objectWrite(star ,".mini-vcs/stagingArea.txt");
+        }
     }
 }
 

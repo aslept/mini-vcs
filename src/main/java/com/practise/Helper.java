@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HexFormat;
 
 public class Helper {
@@ -44,8 +46,16 @@ public class Helper {
     }
 
     public static boolean sha1Checker (Path path, String hex) {
-        String hex1 = sha1(path);
+        String hash = sha1(path);
 
-        return hex1.equalsIgnoreCase(hex);
+        return hash.equalsIgnoreCase(hex);
+    }
+
+    public static String currDateTime() {
+        ZonedDateTime zonedDateTime = ZonedDateTime.now();
+        DateTimeFormatter dT = DateTimeFormatter.RFC_1123_DATE_TIME;
+        String result = dT.format(zonedDateTime);
+
+        return result;
     }
 }

@@ -49,4 +49,16 @@ public class HelperTest {
 
         assertEquals(expectedHash, actualHash);
     }
+
+    @Test
+    public void sha1CheckTest() {
+        Path path = Path.of("src/test/java/testfiles/file.txt");
+        String expectedHash = "bcc5579ba0c69487ea8b5be888cf0925e18f8d01";
+
+        boolean bool = Helper.sha1Checker(path, expectedHash);
+
+        System.out.println("Same? " + bool);
+
+        assertTrue(bool);
+    }
 }
