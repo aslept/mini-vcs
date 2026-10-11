@@ -43,10 +43,9 @@ public class Helper {
         return hex;
     }
 
-    public static boolean sha1Checker (Path p, Path q) {
-        String hex1 = sha1(p);
-        String hex2 = sha1(q);
+    public static boolean sha1Checker (Path path, String hex) {
+        String hex1 = sha1(path);
 
-        return hex1.equalsIgnoreCase(hex2);
+        return hex1.equalsIgnoreCase(hex);
     }
 }

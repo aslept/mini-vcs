@@ -20,6 +20,8 @@ public class Main {
             case "init" -> Repo.init();
 
             case "status" -> Repo.status();
+
+            case "add" -> Repo.add(args[1]);
         }
     }
 }
