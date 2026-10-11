@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Repo {
     private static boolean isRepo() {
@@ -76,9 +77,11 @@ public class Repo {
         List<String> modified = new ArrayList<>();
         List<String> deleted = new ArrayList<>();
 
+        // file in previous commit.
         for (Map.Entry<String, String> file : commitFiles.entrySet()) {
             String fileLocation = file.getKey();
 
+            // file in staging area
             if (starFiles.containsKey(fileLocation)) {
                 String hexValue = starFiles.get(fileLocation);
 
@@ -88,7 +91,9 @@ public class Repo {
                 } else {
                     deleted.add(fileLocation);
                 }
-            } else {
+            }
+            // file not in staging area
+            else {
                 String hexValue = file.getValue();
 
                 if (Files.exists(Path.of(fileLocation))) {
@@ -100,6 +105,7 @@ public class Repo {
             }
         }
 
+        // file only in staging area
         for (Map.Entry<String, String> file : starFiles.entrySet()) {
             if (commitFiles.containsKey(file.getKey())) { continue; }
 
@@ -179,6 +185,17 @@ public class Repo {
 
         String hash = Helper.sha1(filePath);
 
+        if (Helper.sha1Checker(filePath, commitFiles.get(file))) {
+            if (starFiles.containsKey(file)) {
+                starFiles.remove(file);
+                System.out.println("File: " + file + "is the same in the latest commit, removing from staging area");
+            } else {
+                System.out.println("File: " + file + "is the same in the latest commit");
+            }
+            Helper.objectWrite(star ,".mini-vcs/stagingArea.txt");
+            return;
+        }
+
         if (!Helper.sha1Checker(filePath, commitFiles.get(file))) {
             if (starFiles.containsKey(file)) {
                 starFiles.replace(file, hash);
@@ -193,7 +210,7 @@ public class Repo {
 
 class StagingArea implements Serializable {
     private String currName;
-    private Map<String, String> files;
+    private Map<String, String> files = new TreeMap<>();
 
     public void setCurr(String curr) {
         this.currName = curr;
