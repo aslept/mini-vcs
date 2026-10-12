@@ -189,7 +189,7 @@ public class Repo {
             } else {
                 starFiles.put(file, "deleted");
             }
-            System.out.println("File: " + file + "staged for deletion");
+            System.out.println("File: " + file + " staged for deletion");
             Helper.objectWrite(star ,".mini-vcs/stagingArea.txt");
             return;
         }
@@ -285,6 +285,44 @@ public class Repo {
 
         System.out.println("Commit successful! SHA1 Code: " + hex);
 
+    }
+
+    /** checkout- creates a folder with the name of the format: Commit "first 6 digits of the commit hash"
+     * and copies the files from the blob with the location as given in the commit map with this folder as the parent.*/
+    public static void checkout(String commitHex) {
+        if (!isRepo()) {
+            System.out.println("Not a valid repo");
+            return;
+        }
+
+        if (!Files.exists(Path.of(".mini-vcs/commits/" + commitHex + ".txt"))) {
+            System.out.println("No such commit hash.");
+            return;
+        }
+
+        String newFolder = "Commit " + commitHex.substring(0, 6);
+
+        try {
+            Files.createDirectory(Path.of(newFolder));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Path path = Path.of(".mini-vcs/commits/" + commitHex + ".txt");
+        Commit commit = (Commit) Helper.objectRead(path.toString());
+
+        Map<String, String> commitFiles = commit.getFiles();
+
+        for (Map.Entry<String, String> fileLocation : commitFiles.entrySet()) {
+            File file = new File(newFolder + "/" + fileLocation.getKey());
+            String parent = file.getParent();
+            try {
+                Files.createDirectories(Path.of(parent));
+                Files.copy(Path.of(".mini-vcs/blob/" + fileLocation.getValue()), Path.of(file.getPath()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
 
