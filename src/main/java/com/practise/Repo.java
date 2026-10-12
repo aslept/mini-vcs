@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +18,10 @@ public class Repo {
 
     private static Path repo = Path.of(".mini-vcs");
     private static Path commits = Path.of(".mini-vcs/commits");
-    private  static Path blobs = Path.of(".mini-vcs/blob");
+    private static Path blobs = Path.of(".mini-vcs/blob");
     private static Path tempDir = Path.of(".mini-vcs/tempDir");
     private static Path tempFile = Path.of(".mini-vcs/tempDir/tempFile.txt");
-    private static Path stageFolder = Path.of(".mini-vcs/stagingArea");
+    private static Path stageFolder = Path.of(".mini-vcs/stageFolder");
 
     /** init- creates the repo folder and necessary folders and creates an empty commit */
     public static void init() {
@@ -248,7 +249,7 @@ public class Repo {
         *  the path and only save the file by the name of the hash.*/
 
         for (Map.Entry<String, String> fileLocation : latest.entrySet()) {
-            String fileName = Path.of(fileLocation.getValue()).getFileName().toString();
+            String fileName = Path.of(fileLocation.getKey()).getFileName().toString();
 
             if (Files.exists(Path.of(".mini-vcs/blob/" + fileLocation.getValue()))) {
                 continue;
@@ -257,7 +258,7 @@ public class Repo {
             String filePath = ".mini-vcs/blob/" + fileLocation.getValue();
 
             try {
-                Files.copy(Path.of(".mini-vcs/stagingArea/" + fileName), Path.of(filePath));
+                Files.copy(Path.of(".mini-vcs/stageFolder/" + fileName), Path.of(filePath));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -272,6 +273,7 @@ public class Repo {
         Helper.objectWrite(latestCommit, file);
 
         star.setCurr(hex + ".txt");
+        star.deleteStage();
         starFiles.clear();
         Helper.objectWrite(star, ".mini-vcs/stagingArea.txt");
 
@@ -281,7 +283,7 @@ public class Repo {
             throw new RuntimeException(e);
         }
 
-        System.out.println("Commit successfull! SHA1 Code: " + hex);
+        System.out.println("Commit successful! SHA1 Code: " + hex);
 
     }
 }
@@ -292,7 +294,16 @@ class StagingArea implements Serializable {
 
     public void setCurr(String curr) {
         this.currName = curr;
-        deleteDirectory(new File(".mini-vcs/stagingArea"));
+    }
+
+    public void deleteStage() {
+        deleteDirectory(new File(".mini-vcs/stageFolder"));
+
+        try {
+            Files.createDirectory(Path.of(".mini-vcs/stageFolder/"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getCurr() {
@@ -307,18 +318,17 @@ class StagingArea implements Serializable {
     *  saves the file by its name only and stripping the full path */
     public void update(String filePath, String inputHash) {
         String hash = Helper.sha1(Path.of(filePath));
-        String fileName = Path.of(files.get(filePath)).getFileName().toString();
+        String fileName = Path.of(filePath).getFileName().toString();
 
         if (Helper.sha1Checker(Path.of(filePath), inputHash)) {
             try {
-                Files.deleteIfExists(Path.of(filePath));
-                Files.copy(Path.of(filePath), Path.of(".mini-vcs/stagingArea/" + fileName));
+                Files.copy(Path.of(filePath), Path.of(".mini-vcs/stageFolder/" + fileName), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
     }
-    
+
     private boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
