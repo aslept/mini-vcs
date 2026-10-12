@@ -3,17 +3,21 @@ package com.practise;
 /*
 init
 status
-commit
 add
+commit
 log
 checkout
  */
 
 public class Main {
     public static void main(String[] args) {
+        String def = "Invalid operation, use the following commands \ninit \nstatus \ncommit \"message\" \nadd \"filename\"";
+
         if (args.length == 0) {
-            System.out.println("empty bruh?");
+            System.out.println(def);
             return;
+        } else if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("commit")) {
+            if (args.length == 1 || args.length > 2) System.out.println(def);
         }
 
         switch (args[0]) {
@@ -22,6 +26,11 @@ public class Main {
             case "status" -> Repo.status();
 
             case "add" -> Repo.add(args[1]);
+
+            case "commit" -> Repo.commit(args[1]);
+
+            default -> System.out.println(def);
         }
+
     }
 }

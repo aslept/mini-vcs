@@ -5,18 +5,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Commit implements Serializable {
-    private Commit parent;
+    private String parent;
     private String message;
     private String dateAndTime;
     private Map<String, String> files = new TreeMap<>();
 
-    public Commit(Commit p, String m, String dT) {
-        this.parent = p;
-        this.message = m;
+    public Commit(String parent, String message, String dT) {
+        this.parent = parent;
+        this.message = message;
         this.dateAndTime = dT;
     }
 
-    public Commit getParent() {
+    public String getParent() {
         return parent;
     }
 
