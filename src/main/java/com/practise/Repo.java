@@ -1,5 +1,6 @@
 package com.practise;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -19,6 +20,7 @@ public class Repo {
     private  static Path blobs = Path.of(".mini-vcs/blob");
     private static Path tempDir = Path.of(".mini-vcs/tempDir");
     private static Path tempFile = Path.of(".mini-vcs/tempDir/tempFile.txt");
+    private static Path stageFolder = Path.of(".mini-vcs/stagingArea");
 
     /** init- creates the repo folder and necessary folders and creates an empty commit */
     public static void init() {
@@ -32,6 +34,7 @@ public class Repo {
             Files.createDirectory(commits);
             Files.createDirectory(blobs);
             Files.createDirectory(tempDir);
+            Files.createDirectory(stageFolder);
 
             StagingArea stagingArea = new StagingArea();
             Commit initialCommit = new Commit(null, "Initialization Commit", Helper.currDateTime());
@@ -163,6 +166,11 @@ public class Repo {
 
         Path filePath = Path.of(file);
 
+        if (Files.isDirectory(filePath)) {
+            System.out.println("Not a file.");
+            return;
+        }
+
         boolean b = Files.exists(filePath);
 
         if (!b) {
@@ -204,6 +212,7 @@ public class Repo {
             } else {
                 starFiles.put(file, hash);
             }
+            star.update(filePath.toString(), hash);
             System.out.println("File: " + file + " staged for commit");
             Helper.objectWrite(star ,".mini-vcs/stagingArea.txt");
         }
@@ -214,7 +223,8 @@ public class Repo {
      * 2) replace the common keys' values (last commit and staging area) to the one in the latter.
      * 3) add the keys which are new in the staging area to the new map.
      * 4) create a commit with this map.
-     * 5) update the current commit in staging area to this one and clear its map.*/
+     * 5) save the files in the blob folder with their hashcode names.
+     * 6) update the current commit in staging area to this one and clear its map.*/
     public static void commit(String message) {
         if (!isRepo()) {
             System.out.println("Not a valid repo");
@@ -233,6 +243,25 @@ public class Repo {
         latest.putAll(starFiles);
 
         latest.entrySet().removeIf(e -> e.getValue().equalsIgnoreCase("deleted"));
+
+        /* The map has the full location of the file, but when saving in repo, we strip
+        *  the path and only save the file by the name of the hash.*/
+
+        for (Map.Entry<String, String> fileLocation : latest.entrySet()) {
+            String fileName = Path.of(fileLocation.getValue()).getFileName().toString();
+
+            if (Files.exists(Path.of(".mini-vcs/blob/" + fileLocation.getValue()))) {
+                continue;
+            }
+
+            String filePath = ".mini-vcs/blob/" + fileLocation.getValue();
+
+            try {
+                Files.copy(Path.of(".mini-vcs/stagingArea/" + fileName), Path.of(filePath));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         Commit latestCommit = new Commit(star.getCurr(), message, Helper.currDateTime());
         latestCommit.setFiles(latest);
@@ -263,6 +292,7 @@ class StagingArea implements Serializable {
 
     public void setCurr(String curr) {
         this.currName = curr;
+        deleteDirectory(new File(".mini-vcs/stagingArea"));
     }
 
     public String getCurr() {
@@ -271,5 +301,31 @@ class StagingArea implements Serializable {
 
     public Map<String, String> getFiles() {
         return files;
+    }
+
+    /* updates and replaces the file in the staging area with the file in the system in the map.
+    *  saves the file by its name only and stripping the full path */
+    public void update(String filePath, String inputHash) {
+        String hash = Helper.sha1(Path.of(filePath));
+        String fileName = Path.of(files.get(filePath)).getFileName().toString();
+
+        if (Helper.sha1Checker(Path.of(filePath), inputHash)) {
+            try {
+                Files.deleteIfExists(Path.of(filePath));
+                Files.copy(Path.of(filePath), Path.of(".mini-vcs/stagingArea/" + fileName));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    
+    private boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }

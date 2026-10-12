@@ -18,6 +18,7 @@ public class Main {
             return;
         } else if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("commit")) {
             if (args.length == 1 || args.length > 2) System.out.println(def);
+            return;
         }
 
         switch (args[0]) {
