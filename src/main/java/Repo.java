@@ -1,5 +1,3 @@
-package com.practise;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -283,7 +281,7 @@ public class Repo {
             throw new RuntimeException(e);
         }
 
-        System.out.println("Commit successful! SHA1 Code: " + hex);
+        System.out.println("Commit successful! Commit ID: " + hex);
 
     }
 
@@ -323,6 +321,44 @@ public class Repo {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /** log- it displays information about all the commits (including the initial commit made by init command) in a formatted way. */
+    public static void log() {
+        if (!isRepo()) {
+            System.out.println("Not a valid repo");
+            return;
+        }
+
+        StagingArea star = (StagingArea) Helper.objectRead(".mini-vcs/stagingArea.txt");
+        String path = ".mini-vcs/commits/" + star.getCurr();
+        Commit curr = (Commit) Helper.objectRead(path);
+        String commitID =  star.getCurr().replace(".txt", "");
+
+        while (curr != null) {
+            String message = curr.getMessage();
+            String dateAndTime = curr.getDateAndTime();
+
+            String logMessage = "Commit ID: " + commitID
+                    + "\nMessage: " + message
+                    + "\nDate: " + dateAndTime
+                    + "\n";
+
+            System.out.println(logMessage);
+
+            if (curr.getParent() != null) {
+            commitID = curr.getParent().replace(".txt", "");
+            }
+
+            if (curr.getParent() == null) {
+                curr = null;
+                continue;
+            }
+
+            curr = (Commit) Helper.objectRead(".mini-vcs/commits/" + curr.getParent());
+        }
+
+
     }
 }
 

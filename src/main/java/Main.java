@@ -1,5 +1,3 @@
-package com.practise;
-
 /*
 init
 status
@@ -11,7 +9,13 @@ log
 
 public class Main {
     public static void main(String[] args) {
-        String def = "Invalid operation, use the following commands \ninit \nstatus \ncommit \"message\" \nadd \"filename\" \ncheckout \"commit hash\"";
+        String def = "Invalid operation, use the following commands " +
+                "\ninit " +
+                "\nstatus " +
+                "\ncommit \"message\" " +
+                "\nadd \"filename\" " +
+                "\ncheckout \"commit id\" " +
+                "\nlog";
 
         if (args.length == 0) {
             System.out.println(def);
@@ -35,6 +39,8 @@ public class Main {
             case "commit" -> Repo.commit(args[1]);
 
             case "checkout" -> Repo.checkout(args[1]);
+
+            case "log" -> Repo.log();
 
             default -> System.out.println(def);
         }

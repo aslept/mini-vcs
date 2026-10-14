@@ -1,11 +1,10 @@
-package com.practise;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Commit implements Serializable {
     private String parent;
+    private String id;
     private String message;
     private String dateAndTime;
     private Map<String, String> files = new TreeMap<>();
@@ -34,5 +33,13 @@ public class Commit implements Serializable {
 
     public void setFiles(Map<String, String> files) {
         this.files = files;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
