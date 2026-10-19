@@ -61,8 +61,7 @@ public class Repo {
      * 4) if the file is not in the staging area, compare the sha1 of the file in the directory against
      * the one in the commit and if it is changed, mark it as modified.
      * 5) if it is deleted, mark the file as "deleted".
-     * 6) if the file is in staging area but not in current commit, do the same checks.
-     * 7) Finally, show untracked file. */
+     * 6) if the file is in staging area but not in current commit, do the same checks. */
     public static void status() {
         if (!isRepo()) {
             System.out.println("Not a valid repo");
